@@ -23,6 +23,7 @@ jobs:
           destination: coverage.txt
       - codecov/upload:
           file: coverage.txt
+          flags: unittests
 
 workflows:
   version: 2
