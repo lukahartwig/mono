@@ -1,0 +1,31 @@
+version: 2
+
+orbs:
+  codecov: codecov/codecov@1.0.1
+
+defaults: &defaults
+  docker:
+    - image: circleci/golang:1.11
+
+jobs:
+  test:
+    <<: *defaults
+    steps:
+      - checkout
+      - run:
+          name: Install dependencies
+          command: make dependencies
+      - run:
+          name: Run tests
+          command: make testCI
+      - store_artifacts:
+          path: ./coverage.txt
+          destination: coverage.txt
+      - codecov/upload:
+          file: coverage.txt
+
+workflows:
+  version: 2
+  ci:
+    jobs:
+      - test
