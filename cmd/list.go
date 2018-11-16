@@ -2,24 +2,24 @@ package cmd
 
 import (
 	"fmt"
-	"log"
 
 	"github.com/spf13/cobra"
 )
 
-func init() {
-	rootCmd.AddCommand(listCmd)
-}
+func NewListCmd(cli *CLI) *cobra.Command {
+	return &cobra.Command{
+		Use: "list",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			modules, err := cli.client.List()
+			if err != nil {
+				return err
+			}
 
-var listCmd = &cobra.Command{
-	Use: "list",
-	Run: func(cmd *cobra.Command, args []string) {
-		modules, err := c.List()
-		if err != nil {
-			log.Fatal(err)
-		}
-		for _, m := range modules {
-			fmt.Println(m.Name)
-		}
-	},
+			for _, m := range modules {
+				fmt.Println(m.Name)
+			}
+
+			return nil
+		},
+	}
 }

@@ -5,5 +5,7 @@ import (
 )
 
 func main() {
-	cmd.Execute()
+	cli := cmd.New()
+
+	_ = cmd.NewRootCmd(cli).Execute()
 }

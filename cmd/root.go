@@ -1,8 +1,6 @@
 package cmd
 
 import (
-	"log"
-
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
@@ -10,42 +8,61 @@ import (
 )
 
 var (
-	c client.Client
-
 	configFile string
 )
 
-func init() {
-	cobra.OnInitialize(initClient)
-
-	rootCmd.PersistentFlags().StringVarP(&configFile, "config", "c", ".mono.yml", "config file")
+type CLI struct {
+	client client.Client
 }
 
-var rootCmd = &cobra.Command{
-	Use: "mono",
+func New() *CLI {
+	return &CLI{}
 }
 
-func Execute() {
-	if err := rootCmd.Execute(); err != nil {
-		log.Fatalln(err)
+func NewRootCmd(cli *CLI) *cobra.Command {
+	rootCmd := &cobra.Command{
+		Use: "mono",
+		PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
+			config, err := loadConfig()
+			if err != nil {
+				return err
+			}
+
+			cli.client = client.New(&client.Options{
+				Root: config.Root,
+			})
+
+			return nil
+		},
+		TraverseChildren: true,
 	}
+
+	rootCmd.Flags().StringVarP(&configFile, "config", "c", ".mono.yml", "config file")
+
+	rootCmd.AddCommand(
+		NewExecCmd(cli),
+		NewListCmd(cli),
+	)
+
+	return rootCmd
 }
 
-func initClient() {
-	initConfig()
-
-	opts := &client.Options{
-		Root: viper.GetString("root"),
-	}
-
-	c = client.New(opts)
+type config struct {
+	Root string
 }
 
-func initConfig() {
+func loadConfig() (config, error) {
 	viper.SetConfigFile(configFile)
 	viper.SetDefault("root", ".")
 
 	if err := viper.ReadInConfig(); err != nil {
-		log.Fatalln("cannot read config:", err)
+		return config{}, err
 	}
+
+	var c config
+	if err := viper.Unmarshal(&c); err != nil {
+		return config{}, err
+	}
+
+	return c, nil
 }

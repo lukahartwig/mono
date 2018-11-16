@@ -2,6 +2,7 @@ package module
 
 import (
 	"io/ioutil"
+	"path/filepath"
 
 	"gopkg.in/yaml.v2"
 )
@@ -23,5 +24,6 @@ func FromConfigFile(path string) (Module, error) {
 
 	return Module{
 		Name: config.Name,
+		Path: filepath.Dir(path),
 	}, nil
 }
