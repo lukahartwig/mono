@@ -7,7 +7,6 @@ import (
 
 func TestResolver_Resolve(t *testing.T) {
 	type fields struct {
-		FileName string
 		Root     string
 	}
 	tests := []struct {
@@ -19,7 +18,6 @@ func TestResolver_Resolve(t *testing.T) {
 		{
 			"should return all modules of a valid root",
 			fields{
-				FileName: ".module.yml",
 				Root:     "./testdata/valid",
 			},
 			[]Module{
@@ -33,7 +31,6 @@ func TestResolver_Resolve(t *testing.T) {
 		{
 			"should return error if a module is invalid",
 			fields{
-				FileName: ".module.yml",
 				Root:     "./testdata/invalid",
 			},
 			nil,
@@ -42,10 +39,7 @@ func TestResolver_Resolve(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			s := &Resolver{
-				FileName: tt.fields.FileName,
-				Root:     tt.fields.Root,
-			}
+			s := NewResolver(tt.fields.Root)
 			got, err := s.Resolve()
 			if (err != nil) != tt.wantErr {
 				t.Errorf("Resolver.Resolve() error = %v, wantErr %v", err, tt.wantErr)

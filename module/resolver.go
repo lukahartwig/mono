@@ -5,12 +5,23 @@ import (
 	"path/filepath"
 )
 
-type Resolver struct {
-	FileName string
-	Root string
+type Resolver interface {
+	Resolve() ([]Module, error)
 }
 
-func (s *Resolver) Resolve() ([]Module, error) {
+type resolver struct {
+	FileName string
+	Root     string
+}
+
+func NewResolver(root string) Resolver {
+	return &resolver{
+		FileName: ".module.yml",
+		Root:     root,
+	}
+}
+
+func (s *resolver) Resolve() ([]Module, error) {
 	modulePaths := resolvePaths(s.Root, s.FileName)
 
 	modules := make([]Module, len(modulePaths))

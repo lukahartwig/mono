@@ -5,6 +5,7 @@ import (
 	"github.com/spf13/viper"
 
 	"github.com/lukahartwig/mono/client"
+	"github.com/lukahartwig/mono/module"
 )
 
 var (
@@ -28,9 +29,10 @@ func NewRootCmd(cli *CLI) *cobra.Command {
 				return err
 			}
 
-			cli.client = client.New(&client.Options{
-				Root: config.Root,
-			})
+			resolver := module.NewResolver(config.Root)
+
+			opts := &client.Options{}
+			cli.client = client.New(resolver, opts)
 
 			return nil
 		},

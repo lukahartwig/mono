@@ -1,7 +1,6 @@
 package module
 
 import (
-	"os"
 	"os/exec"
 )
 
@@ -10,9 +9,8 @@ type Module struct {
 	Path string
 }
 
-func (s *Module) Exec(command string, args ...string) error {
+func (s *Module) Command(command string, args ...string) *exec.Cmd {
 	cmd := exec.Command(command, args...)
 	cmd.Dir = s.Path
-	cmd.Stdout = os.Stdout
-	return cmd.Run()
+	return cmd
 }
