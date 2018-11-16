@@ -18,9 +18,7 @@ func TestFromConfigFile(t *testing.T) {
 		{
 			"should return a module from the config file",
 			args{"./testdata/valid/module-a/.module.yml"},
-			Module{
-				Name: "module-a",
-			},
+			Module{Name: "module-a", Path: "testdata/valid/module-a"},
 			false,
 		},
 		{
