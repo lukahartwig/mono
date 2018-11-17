@@ -4,9 +4,15 @@ import (
 	"os/exec"
 )
 
+type Task struct {
+	Command string
+	Args    []string
+}
+
 type Module struct {
-	Name string
-	Path string
+	Name  string
+	Path  string
+	Tasks map[string]Task
 }
 
 func (s *Module) Command(command string, args ...string) *exec.Cmd {
