@@ -17,7 +17,7 @@ type Module struct {
 	Tasks map[string]Task
 }
 
-func (s *Module) Task(name string) (*exec.Cmd, error) {
+func (s *Module) GetTask(name string) (*exec.Cmd, error) {
 	task, ok := s.Tasks[name]
 	if !ok {
 		return nil, errors.Errorf("module %s has no task %s", s.Name, name)

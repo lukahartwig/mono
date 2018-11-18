@@ -31,8 +31,7 @@ func NewRootCmd(cli *CLI) *cobra.Command {
 
 			resolver := module.NewResolver(config.Root)
 
-			opts := &client.Options{}
-			cli.client = client.New(resolver, opts)
+			cli.client = client.New(resolver)
 
 			return nil
 		},
@@ -44,6 +43,7 @@ func NewRootCmd(cli *CLI) *cobra.Command {
 	rootCmd.AddCommand(
 		NewExecCmd(cli),
 		NewListCmd(cli),
+		NewRunCmd(cli),
 	)
 
 	return rootCmd

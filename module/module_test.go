@@ -140,7 +140,7 @@ func TestModule_Task(t *testing.T) {
 				Path:  tt.fields.Path,
 				Tasks: tt.fields.Tasks,
 			}
-			got, err := s.Task(tt.args.name)
+			got, err := s.GetTask(tt.args.name)
 			if tt.wantErr {
 				assert.Error(t, err)
 				return
