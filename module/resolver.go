@@ -5,6 +5,7 @@ import (
 	"path/filepath"
 )
 
+// Resolver resolves all the modules
 type Resolver interface {
 	Resolve() ([]Module, error)
 }
@@ -14,6 +15,7 @@ type resolver struct {
 	Root     string
 }
 
+// Returns a new Resolver instance
 func NewResolver(root string) Resolver {
 	return &resolver{
 		FileName: ".module.yml",
@@ -21,6 +23,8 @@ func NewResolver(root string) Resolver {
 	}
 }
 
+// Resolve returns all the modules that a below the root directory. A module is
+// defined by a .module.yml config file in the directory.
 func (s *resolver) Resolve() ([]Module, error) {
 	modulePaths := resolvePaths(s.Root, s.FileName)
 

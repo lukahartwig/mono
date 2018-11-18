@@ -9,6 +9,8 @@ import (
 	"github.com/lukahartwig/mono/module"
 )
 
+// Client is the programmatically API for the modules handling and task
+// executions.
 type Client interface {
 	Exec(command string, args ...string) (io.Reader, error)
 	List() ([]module.Module, error)
@@ -19,12 +21,14 @@ type client struct {
 	resolver module.Resolver
 }
 
+// New returns a new client instance
 func New(resolver module.Resolver) Client {
 	return &client{
 		resolver: resolver,
 	}
 }
 
+// Exec runs a command in every module
 func (s *client) Exec(command string, args ...string) (io.Reader, error) {
 	modules, err := s.resolver.Resolve()
 	if err != nil {
@@ -33,6 +37,7 @@ func (s *client) Exec(command string, args ...string) (io.Reader, error) {
 	return s.execSync(modules, command, args...), nil
 }
 
+// List returns a list of all modules
 func (s *client) List() ([]module.Module, error) {
 	return s.resolver.Resolve()
 }
@@ -51,7 +56,7 @@ func (s *client) execSync(modules []module.Module, command string, args ...strin
 	for _, m := range modules {
 		cmds = append(cmds, m.Command(command, args...))
 	}
-	return s.execCommandSync(cmds...)
+	return execCommandSync(cmds...)
 }
 
 func (s *client) runTaskSync(modules []module.Module, task string) io.Reader {
@@ -64,10 +69,10 @@ func (s *client) runTaskSync(modules []module.Module, task string) io.Reader {
 		}
 		cmds = append(cmds, cmd)
 	}
-	return s.execCommandSync(cmds...)
+	return execCommandSync(cmds...)
 }
 
-func (s *client) execCommandSync(cmds ...*exec.Cmd) io.Reader {
+func execCommandSync(cmds ...*exec.Cmd) io.Reader {
 	pr, pw := io.Pipe()
 	go func() {
 		for _, cmd := range cmds {

@@ -15,6 +15,8 @@ type config struct {
 	Tasks map[string]commandConfig `yaml:"tasks"`
 }
 
+// FromConfigFile returns a Module from the module config file in the
+// directory.
 func FromConfigFile(path string) (Module, error) {
 	buf, err := ioutil.ReadFile(path)
 	if err != nil {
