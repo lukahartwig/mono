@@ -1,8 +1,46 @@
 package module
 
 import (
-	"reflect"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
+)
+
+var (
+	moduleA = Module{
+		Name: "module-a",
+		Path: "testdata/valid/module-a",
+		Tasks: map[string]Task{
+			"build": {
+				Command: "yarn",
+				Args:    []string{"run", "build"},
+			},
+			"test": {
+				Command: "yarn",
+				Args:    []string{"run", "test"},
+			},
+		},
+	}
+	moduleB = Module{
+		Name: "module-b",
+		Path: "testdata/valid/module-b",
+		Tasks: map[string]Task{
+			"build": {
+				Command: "make",
+				Args: []string{},
+			},
+		},
+	}
+	moduleNested = Module{
+		Name: "module-nested",
+		Path: "testdata/valid/module-nested",
+		Tasks: make(map[string]Task),
+	}
+	moduleNestedChild = Module{
+		Name: "module-nested-child",
+		Path: "testdata/valid/module-nested/module-nested-child",
+		Tasks: make(map[string]Task),
+	}
 )
 
 func TestFromConfigFile(t *testing.T) {
@@ -18,7 +56,13 @@ func TestFromConfigFile(t *testing.T) {
 		{
 			"should return a module from the config file",
 			args{"./testdata/valid/module-a/.module.yml"},
-			Module{Name: "module-a", Path: "testdata/valid/module-a"},
+			moduleA,
+			false,
+		},
+		{
+			"should return a module when task has no arguments",
+			args{"./testdata/valid/module-b/.module.yml"},
+			moduleB,
 			false,
 		},
 		{
@@ -33,17 +77,21 @@ func TestFromConfigFile(t *testing.T) {
 			Module{},
 			true,
 		},
+		{
+			"should return error when a task has no command",
+			args{"./testdata/invalid/task-without-cmd/.module.yml"},
+			Module{},
+			true,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			got, err := FromConfigFile(tt.args.path)
-			if (err != nil) != tt.wantErr {
-				t.Errorf("FromConfigFile() error = %v, wantErr %v", err, tt.wantErr)
+			if tt.wantErr {
+				assert.Error(t, err)
 				return
 			}
-			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("FromConfigFile() = %v, want %v", got, tt.want)
-			}
+			assert.EqualValues(t, tt.want, got)
 		})
 	}
 }

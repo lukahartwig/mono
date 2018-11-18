@@ -1,1 +1,3 @@
 name: module-a
+tasks:
+  build: ["echo", "running", "build", "task"]

@@ -1,9 +1,11 @@
 package client
 
 import (
-	"bytes"
+	"io/ioutil"
 	"reflect"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 
 	"github.com/lukahartwig/mono/module"
 )
@@ -12,6 +14,16 @@ var (
 	moduleA = module.Module{
 		Name: "module-a",
 		Path: ".",
+		Tasks: map[string]module.Task{
+			"build": {
+				Command: "echo",
+				Args:    []string{"running", "build", "task"},
+			},
+			"invalid-task": {
+				Command: "this-is-not-a-command",
+				Args:    []string{},
+			},
+		},
 	}
 )
 
@@ -39,7 +51,7 @@ func Test_client_Exec(t *testing.T) {
 		wantErr bool
 	}{
 		{
-			"should execute a command and write the output to stdout",
+			"should execute a command in every module",
 			fields{&mockResolver{
 				[]module.Module{moduleA},
 			}},
@@ -66,17 +78,14 @@ func Test_client_Exec(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			out := new(bytes.Buffer)
-			s := New(
-				tt.fields.resolver,
-				&Options{Stdout: out},
-			)
-			if err := s.Exec(tt.args.command, tt.args.args...); (err != nil) != tt.wantErr {
-				t.Errorf("client.Exec() error = %v, wantErr %v", err, tt.wantErr)
+			s := New(tt.fields.resolver)
+			out, _ := s.Exec(tt.args.command, tt.args.args...)
+			got, err := ioutil.ReadAll(out)
+			if tt.wantErr {
+				assert.Error(t, err)
+				return
 			}
-			if out.String() != tt.want {
-				t.Errorf("client.Exec() stdout = %v, want %v", out.String(), tt.want)
-			}
+			assert.EqualValues(t, tt.want, string(got))
 		})
 	}
 }
@@ -117,6 +126,62 @@ func Test_client_List(t *testing.T) {
 			if !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("client.List() = %v, want %v", got, tt.want)
 			}
+		})
+	}
+}
+
+func Test_client_RunTask(t *testing.T) {
+	type fields struct {
+		resolver module.Resolver
+	}
+	type args struct {
+		name string
+	}
+	tests := []struct {
+		name    string
+		fields  fields
+		args    args
+		want    string
+		wantErr bool
+	}{
+		{
+			"should run task in every module",
+			fields{&mockResolver{
+				[]module.Module{moduleA},
+			}},
+			args{"build"},
+			"running build task\n",
+			false,
+		},
+		{
+			"should skip modules that do not have the task",
+			fields{&mockResolver{
+				[]module.Module{moduleA},
+			}},
+			args{"task-that-does-not-exist"},
+			"",
+			false,
+		},
+		{
+			"should skip modules that do not have the task",
+			fields{&mockResolver{
+				[]module.Module{moduleA},
+			}},
+			args{"invalid-task"},
+			"",
+			true,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			s := New(tt.fields.resolver)
+			out, _ := s.RunTask(tt.args.name)
+			got, err := ioutil.ReadAll(out)
+			if tt.wantErr {
+				assert.Error(t, err)
+				return
+			}
+			assert.EqualValues(t, tt.want, string(got))
 		})
 	}
 }

@@ -1,8 +1,9 @@
 package module
 
 import (
-	"reflect"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func TestResolver_Resolve(t *testing.T) {
@@ -21,10 +22,10 @@ func TestResolver_Resolve(t *testing.T) {
 				Root:     "./testdata/valid",
 			},
 			[]Module{
-				{"module-a", "testdata/valid/module-a"},
-				{"module-b", "testdata/valid/module-b"},
-				{"module-nested", "testdata/valid/module-nested"},
-				{"module-nested-child", "testdata/valid/module-nested/module-nested-child"},
+				moduleA,
+				moduleB,
+				moduleNested,
+				moduleNestedChild,
 			},
 			false,
 		},
@@ -39,15 +40,12 @@ func TestResolver_Resolve(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			s := NewResolver(tt.fields.Root)
-			got, err := s.Resolve()
-			if (err != nil) != tt.wantErr {
-				t.Errorf("Resolver.Resolve() error = %v, wantErr %v", err, tt.wantErr)
+			got, err := NewResolver(tt.fields.Root).Resolve()
+			if tt.wantErr {
+				assert.Error(t, err)
 				return
 			}
-			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("Resolver.Resolve() = %v, want %v", got, tt.want)
-			}
+			assert.EqualValues(t, tt.want, got)
 		})
 	}
 }

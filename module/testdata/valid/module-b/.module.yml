@@ -1,1 +1,4 @@
 name: module-b
+tasks:
+  build:
+    - make

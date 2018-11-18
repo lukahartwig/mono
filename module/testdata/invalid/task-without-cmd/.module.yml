@@ -1,0 +1,3 @@
+name: task-without-cmd
+tasks:
+  build: # should throw an error
