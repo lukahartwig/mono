@@ -15,7 +15,7 @@ type resolver struct {
 	Root     string
 }
 
-// Returns a new Resolver instance
+// NewResolver returns a new Resolver instance
 func NewResolver(root string) Resolver {
 	return &resolver{
 		FileName: ".module.yml",

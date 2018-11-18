@@ -12,14 +12,17 @@ var (
 	configFile string
 )
 
+// CLI is the context that is passed to all the commands.
 type CLI struct {
 	client client.Client
 }
 
+// New returns a new CLI instance
 func New() *CLI {
 	return &CLI{}
 }
 
+// NewRootCmd returns the root cobra command
 func NewRootCmd(cli *CLI) *cobra.Command {
 	rootCmd := &cobra.Command{
 		Use: "mono",

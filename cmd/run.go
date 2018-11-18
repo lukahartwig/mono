@@ -7,7 +7,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// NewRunCmd returns a cobra command that can run tasks in modules
+// NewRunCmd returns a cobra command that can run tasks in modules.
 func NewRunCmd(cli *CLI) *cobra.Command {
 	return &cobra.Command{
 		Use:  "run",

@@ -7,6 +7,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
+// NewExecCmd returns a new cobra command to run commands in modules.
 func NewExecCmd(cli *CLI) *cobra.Command {
 	return &cobra.Command{
 		Use:  "exec",

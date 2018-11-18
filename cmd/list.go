@@ -6,6 +6,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
+// NewListCmd returns a new cobra command to list modules.
 func NewListCmd(cli *CLI) *cobra.Command {
 	return &cobra.Command{
 		Use: "list",
