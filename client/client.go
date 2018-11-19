@@ -9,10 +9,12 @@ import (
 	"github.com/lukahartwig/mono/module"
 )
 
+// ExecOptions are the options for the exec command
 type ExecOptions struct {
 	Included []string
 }
 
+// RunOptions are the options for the run command
 type RunOptions struct {
 	Included []string
 }

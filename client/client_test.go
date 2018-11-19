@@ -193,7 +193,7 @@ func Test_client_List(t *testing.T) {
 	}
 }
 
-func Test_client_RunTask(t *testing.T) {
+func Test_client_Run(t *testing.T) {
 	type fields struct {
 		resolver module.Resolver
 	}
@@ -237,7 +237,7 @@ func Test_client_RunTask(t *testing.T) {
 			false,
 		},
 		{
-			"should skip modules that do not have the task",
+			"should return an error when the task is invalid",
 			fields{
 				&mockResolver{
 					[]module.Module{moduleA},
