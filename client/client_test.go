@@ -25,6 +25,16 @@ var (
 			},
 		},
 	}
+	moduleB = module.Module{
+		Name: "module-b",
+		Path: ".",
+		Tasks: map[string]module.Task{
+			"build": {
+				Command: "echo",
+				Args:    []string{"running", "build", "in", "module-b"},
+			},
+		},
+	}
 )
 
 type mockResolver struct {
@@ -42,6 +52,7 @@ func Test_client_Exec(t *testing.T) {
 	type args struct {
 		command string
 		args    []string
+		opts    *ExecOptions
 	}
 	tests := []struct {
 		name    string
@@ -52,26 +63,78 @@ func Test_client_Exec(t *testing.T) {
 	}{
 		{
 			"should execute a command in every module",
-			fields{&mockResolver{
-				[]module.Module{moduleA},
-			}},
-			args{"echo", []string{"hello", "world"}},
+			fields{
+				&mockResolver{
+					[]module.Module{moduleA},
+				},
+			},
+			args{
+				"echo",
+				[]string{"hello", "world"},
+				&ExecOptions{},
+			},
 			"hello world\n",
 			false,
 		},
 		{
 			"should error when a command fails",
-			fields{&mockResolver{
-				[]module.Module{moduleA},
-			}},
-			args{"this-is-not-a-command", []string{}},
+			fields{
+				&mockResolver{
+					[]module.Module{moduleA},
+				},
+			},
+			args{
+				"this-is-not-a-command",
+				[]string{},
+				&ExecOptions{},
+			},
 			"",
 			true,
 		},
 		{
 			"should have no output when no modules were found",
-			fields{&mockResolver{}},
-			args{"pwd", []string{}},
+			fields{
+				&mockResolver{},
+			},
+			args{
+				"pwd",
+				[]string{},
+				&ExecOptions{},
+			},
+			"",
+			false,
+		},
+		{
+			"should only run command for included modules",
+			fields{
+				&mockResolver{
+					[]module.Module{moduleA, moduleB},
+				},
+			},
+			args{
+				"echo",
+				[]string{"hello", "world"},
+				&ExecOptions{
+					[]string{moduleB.Name},
+				},
+			},
+			"hello world\n",
+			false,
+		},
+		{
+			"should run no command when included modules do not exist",
+			fields{
+				&mockResolver{
+					[]module.Module{moduleA, moduleB},
+				},
+			},
+			args{
+				"echo",
+				[]string{"hello", "world"},
+				&ExecOptions{
+					Included: []string{"module-that-does-not-exist"},
+				},
+			},
 			"",
 			false,
 		},
@@ -79,7 +142,7 @@ func Test_client_Exec(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			s := New(tt.fields.resolver)
-			out, _ := s.Exec(tt.args.command, tt.args.args...)
+			out, _ := s.Exec(tt.args.command, tt.args.args, tt.args.opts)
 			got, err := ioutil.ReadAll(out)
 			if tt.wantErr {
 				assert.Error(t, err)
@@ -130,12 +193,13 @@ func Test_client_List(t *testing.T) {
 	}
 }
 
-func Test_client_RunTask(t *testing.T) {
+func Test_client_Run(t *testing.T) {
 	type fields struct {
 		resolver module.Resolver
 	}
 	type args struct {
 		name string
+		opts *RunOptions
 	}
 	tests := []struct {
 		name    string
@@ -146,36 +210,83 @@ func Test_client_RunTask(t *testing.T) {
 	}{
 		{
 			"should run task in every module",
-			fields{&mockResolver{
-				[]module.Module{moduleA},
-			}},
-			args{"build"},
+			fields{
+				&mockResolver{
+					[]module.Module{moduleA},
+				},
+			},
+			args{
+				"build",
+				&RunOptions{},
+			},
 			"running build task\n",
 			false,
 		},
 		{
 			"should skip modules that do not have the task",
-			fields{&mockResolver{
-				[]module.Module{moduleA},
-			}},
-			args{"task-that-does-not-exist"},
+			fields{
+				&mockResolver{
+					[]module.Module{moduleA},
+				},
+			},
+			args{
+				"task-that-does-not-exist",
+				&RunOptions{},
+			},
 			"",
 			false,
 		},
 		{
-			"should skip modules that do not have the task",
-			fields{&mockResolver{
-				[]module.Module{moduleA},
-			}},
-			args{"invalid-task"},
+			"should return an error when the task is invalid",
+			fields{
+				&mockResolver{
+					[]module.Module{moduleA},
+				},
+			},
+			args{
+				"invalid-task",
+				&RunOptions{},
+			},
 			"",
 			true,
+		},
+		{
+			"should only run tasks for included modules",
+			fields{
+				&mockResolver{
+					[]module.Module{moduleA, moduleB},
+				},
+			},
+			args{
+				"build",
+				&RunOptions{
+					Included: []string{moduleB.Name},
+				},
+			},
+			"running build in module-b\n",
+			false,
+		},
+		{
+			"should run no tasks when included modules do not exist",
+			fields{
+				&mockResolver{
+					[]module.Module{moduleA, moduleB},
+				},
+			},
+			args{
+				"build",
+				&RunOptions{
+					Included: []string{"module-that-does-not-exist"},
+				},
+			},
+			"",
+			false,
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			s := New(tt.fields.resolver)
-			out, _ := s.RunTask(tt.args.name)
+			out, _ := s.Run(tt.args.name, tt.args.opts)
 			got, err := ioutil.ReadAll(out)
 			if tt.wantErr {
 				assert.Error(t, err)

@@ -8,10 +8,6 @@ import (
 	"github.com/lukahartwig/mono/module"
 )
 
-var (
-	configFile string
-)
-
 // CLI is the context that is passed to all the commands.
 type CLI struct {
 	client client.Client
@@ -27,21 +23,22 @@ func NewRootCmd(cli *CLI) *cobra.Command {
 	rootCmd := &cobra.Command{
 		Use: "mono",
 		PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
-			config, err := loadConfig()
+			configFile, err := cmd.Flags().GetString("config")
 			if err != nil {
 				return err
 			}
-
+			config, err := loadConfig(configFile)
+			if err != nil {
+				return err
+			}
 			resolver := module.NewResolver(config.Root)
-
 			cli.client = client.New(resolver)
-
 			return nil
 		},
 		TraverseChildren: true,
 	}
 
-	rootCmd.Flags().StringVarP(&configFile, "config", "c", ".mono.yml", "config file")
+	rootCmd.Flags().StringP("config", "c", ".mono.yml", "config file")
 
 	rootCmd.AddCommand(
 		NewExecCmd(cli),
@@ -56,7 +53,7 @@ type config struct {
 	Root string
 }
 
-func loadConfig() (config, error) {
+func loadConfig(configFile string) (config, error) {
 	viper.SetConfigFile(configFile)
 	viper.SetDefault("root", ".")
 
