@@ -9,12 +9,20 @@ import (
 	"github.com/lukahartwig/mono/module"
 )
 
+type ExecOptions struct {
+	Included []string
+}
+
+type RunOptions struct {
+	Included []string
+}
+
 // Client is the programmatically API for the modules handling and task
 // executions.
 type Client interface {
-	Exec(command string, args ...string) (io.Reader, error)
+	Exec(command string, args []string, opts *ExecOptions) (io.Reader, error)
 	List() ([]module.Module, error)
-	RunTask(name string) (io.Reader, error)
+	Run(name string, opts *RunOptions) (io.Reader, error)
 }
 
 type client struct {
@@ -29,8 +37,8 @@ func New(resolver module.Resolver) Client {
 }
 
 // Exec runs a command in every module
-func (s *client) Exec(command string, args ...string) (io.Reader, error) {
-	modules, err := s.resolver.Resolve()
+func (s *client) Exec(command string, args []string, opts *ExecOptions) (io.Reader, error) {
+	modules, err := s.resolve(opts.Included)
 	if err != nil {
 		return nil, err
 	}
@@ -42,13 +50,42 @@ func (s *client) List() ([]module.Module, error) {
 	return s.resolver.Resolve()
 }
 
-// RunTask runs the task with the given name in every module
-func (s *client) RunTask(name string) (io.Reader, error) {
-	modules, err := s.resolver.Resolve()
+// Run runs the task with the given name in every module
+func (s *client) Run(name string, opts *RunOptions) (io.Reader, error) {
+	modules, err := s.resolve(opts.Included)
 	if err != nil {
 		return nil, err
 	}
 	return s.runTaskSync(modules, name), nil
+}
+
+func (s *client) resolve(included []string) ([]module.Module, error) {
+	resolved, err := s.resolver.Resolve()
+	if err != nil {
+		return nil, err
+	}
+
+	var modules []module.Module
+	if included != nil {
+		modules = applyIncluded(resolved, included)
+	} else {
+		modules = resolved
+	}
+
+	return modules, nil
+}
+
+func applyIncluded(resolved []module.Module, included []string) []module.Module {
+	modules := make([]module.Module, 0)
+	for _, m := range resolved {
+		for _, name := range included {
+			if name == m.Name {
+				modules = append(modules, m)
+				continue
+			}
+		}
+	}
+	return modules
 }
 
 func (s *client) execSync(modules []module.Module, command string, args ...string) io.Reader {
